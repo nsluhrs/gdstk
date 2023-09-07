@@ -11,6 +11,8 @@ LICENSE file or <http://www.boost.org/LICENSE_1_0.txt>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <string>
+
 
 #include <gdstk/allocator.hpp>
 #include <gdstk/cell.hpp>
@@ -877,7 +879,7 @@ ErrorCode Cell::to_svg(FILE* out, double scaling, uint32_t precision, const char
 ErrorCode Cell::write_svg(const char* filename, double scaling, uint32_t precision,
                           StyleMap* shape_style, StyleMap* label_style, const char* background,
                           double pad, bool pad_as_percentage,
-                          PolygonComparisonFunction comparison) const {
+                          PolygonComparisonFunction comparison, char* buf_out) const {
     ErrorCode error_code = ErrorCode::NoError;
     Vec2 min, max;
     bounding_box(min, max);
@@ -898,9 +900,17 @@ ErrorCode Cell::write_svg(const char* filename, double scaling, uint32_t precisi
     y -= pad;
     w += 2 * pad;
     h += 2 * pad;
+    
+    FILE* out;
+    char* buffer;
+    size_t len;
 
-    FILE* out = fopen(filename, "w");
-    if (out == NULL) {
+    if (filename[0] == '\0'){
+        out = open_memstream(&buffer, &len);
+    } else {
+        out = fopen(filename, "w");
+    }
+        if (out == NULL) {
         if (error_logger) fputs("[GDSTK] Unable to open file for SVG output.\n", error_logger);
         return ErrorCode::OutputFileOpenError;
     }
@@ -995,6 +1005,8 @@ ErrorCode Cell::write_svg(const char* filename, double scaling, uint32_t precisi
     if (err != ErrorCode::NoError) error_code = err;
     fputs("</svg>", out);
     fclose(out);
+    buf_out = buffer;
+    free(buffer);
     return error_code;
 }
 

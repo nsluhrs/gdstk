@@ -191,7 +191,7 @@ struct Cell {
     // output, which affects their draw order.
     ErrorCode write_svg(const char* filename, double scaling, uint32_t precision,
                         StyleMap* shape_style, StyleMap* label_style, const char* background,
-                        double pad, bool pad_as_percentage, PolygonComparisonFunction comp) const;
+                        double pad, bool pad_as_percentage, PolygonComparisonFunction comp, char* buf_out) const;
 };
 
 }  // namespace gdstk

@@ -724,11 +724,12 @@ static PyObject* cell_object_write_svg(CellObject* self, PyObject* args, PyObjec
     }
 
     const char* filename = PyBytes_AS_STRING(pybytes);
-
+    char* buffer = "";
     ErrorCode error_code;
+
     if (sort_obj == Py_None) {
         error_code = self->cell->write_svg(filename, scaling, precision, &shape_style, &label_style,
-                                           background, pad, pad_as_percentage, NULL);
+                                           background, pad, pad_as_percentage, NULL, buffer);
     } else {
         if (!PyCallable_Check(sort_obj)) {
             PyErr_SetString(PyExc_TypeError, "Argument sort_function must be callable.");
@@ -740,7 +741,7 @@ static PyObject* cell_object_write_svg(CellObject* self, PyObject* args, PyObjec
         polygon_comparison_pyfunc = sort_obj;
         polygon_comparison_pylist = PyList_New(0);
         error_code = self->cell->write_svg(filename, scaling, precision, &shape_style, &label_style,
-                                           background, pad, pad_as_percentage, polygon_comparison);
+                                           background, pad, pad_as_percentage, polygon_comparison, buffer);
         Py_DECREF(polygon_comparison_pylist);
         polygon_comparison_pylist = NULL;
         polygon_comparison_pyfunc = NULL;
@@ -754,7 +755,11 @@ static PyObject* cell_object_write_svg(CellObject* self, PyObject* args, PyObjec
     if (return_error(error_code)) return NULL;
 
     Py_INCREF(self);
-    return (PyObject*)self;
+    if (filename[0] == '\0'){
+        return (PyObject*) buffer;
+    } else {
+        return (PyObject*)self;
+    }
 }
 
 static PyObject* cell_object_remove(CellObject* self, PyObject* args) {
