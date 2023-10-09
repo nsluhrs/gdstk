@@ -1091,6 +1091,60 @@ static PyObject* offset_function(PyObject* mod, PyObject* args, PyObject* kwds) 
     return result;
 }
 
+static PyObject* holes_function(PyObject* mod, PyObject* args, PyObject* kwds) {
+    PyObject* py_polygons;
+    int use_union = 0;
+    unsigned long layer = 0;
+    unsigned long datatype = 0;
+    const char* keywords[] = {"polygons", "use_union", "layer", "datatype", NULL};
+    // todo: update this to read "Od|pkk" instead and strip out distance, join, tollerance and
+    // precision DONE!
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "Od|pkk:holes", (char**)keywords, &py_polygons,
+                                     &use_union, &layer, &datatype))
+        return NULL;
+
+    Array<Polygon*> polygon_array = {};
+    if (parse_polygons(py_polygons, polygon_array, "polygons") < 0) return NULL;
+
+    Array<Array<Array<Polygon*>*>*> result_array = {};
+    ErrorCode error_code = holes(polygon_array, use_union > 0, 1 / precision, result_array);
+
+    if (return_error(error_code)) {
+        for (uint64_t j = 0; j < polygon_array.count; j++) {
+            polygon_array[j]->clear();
+            free_allocation(polygon_array[j]);
+        }
+        polygon_array.clear();
+        for (uint64_t j = 0; j < result_array.count; j++) {
+            result_array[j]->clear();
+            free_allocation(result_array[j]);
+        }
+        result_array.clear();
+        return NULL;
+    }
+
+    Tag tag = make_tag(layer, datatype);
+    PyObject* result = PyList_New(result_array.count);
+    for (uint64_t i = 0; i < result_array.count; i++) {
+        Polygon* poly = result_array[i];
+        PolygonObject* obj = PyObject_New(PolygonObject, &polygon_object_type);
+        obj = (PolygonObject*)PyObject_Init((PyObject*)obj, &polygon_object_type);
+        obj->polygon = poly;
+        poly->tag = tag;
+        poly->owner = obj;
+        PyList_SET_ITEM(result, i, (PyObject*)obj);
+    }
+
+    for (uint64_t j = 0; j < polygon_array.count; j++) {
+        polygon_array[j]->clear();
+        free_allocation(polygon_array[j]);
+    }
+    polygon_array.clear();
+    result_array.clear();
+
+    return result;
+}
+
 static PyObject* boolean_function(PyObject* mod, PyObject* args, PyObject* kwds) {
     PyObject* py_polygons1;
     PyObject* py_polygons2;
@@ -1824,6 +1878,7 @@ static PyMethodDef gdstk_methods[] = {
     {"text", (PyCFunction)text_function, METH_VARARGS | METH_KEYWORDS, text_function_doc},
     {"contour", (PyCFunction)contour_function, METH_VARARGS | METH_KEYWORDS, contour_function_doc},
     {"offset", (PyCFunction)offset_function, METH_VARARGS | METH_KEYWORDS, offset_function_doc},
+    {"holes", (PyCFunction)holes_function, METH_VARARGS | METH_KEYWORDS, holes_function_doc},
     {"boolean", (PyCFunction)boolean_function, METH_VARARGS | METH_KEYWORDS, boolean_function_doc},
     {"slice", (PyCFunction)slice_function, METH_VARARGS | METH_KEYWORDS, slice_function_doc},
     {"inside", (PyCFunction)inside_function, METH_VARARGS | METH_KEYWORDS, inside_function_doc},

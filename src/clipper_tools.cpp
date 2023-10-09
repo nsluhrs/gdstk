@@ -319,5 +319,49 @@ ErrorCode slice(const Polygon& polygon, const Array<double>& positions, bool x_a
 
     return error_code;
 }
+ErrorCode holes(const Array<Polygon*>& polygons, bool use_union, double scaling,
+                Array<Array<Array<Polygon*>*>*>& result) {
+    ErrorCode errorcode = ErrorCode::NoError;
+    // this converts the incoming polygon objects to clipperlib paths
+    ClipperLib::Paths original_polys = polygons_to_paths(polygons, scaling);
+    if (use_union) {
+        ClipperLib::Clipper clpr;
+        clpr.AddPaths(original_polys, ClipperLib::ptSubject, true);
+        ClipperLib::PolyTree joined_tree;
+        clpr.Execute(ClipperLib::ctUnion, joined_tree, ClipperLib::pftNonZero,
+                     ClipperLib::pftNonZero);
+        ClipperLib::Paths joined_polys;
+        ClipperLib::PolyTreeToPaths(joined_tree, joined_polys);
+    } else {
+        for (ClipperLib::Paths::size_type i = 0; i < original_polys.size(); ++i) {
+            ClipperLib::Clipper clpr;
+            clpr.AddPath(original_polys[i], ClipperLib::ptSubject, true);
+            Array<Array<Polygon*>*> shape_res;
+            ClipperLib::PolyTree solution;
+            clpr.Execute(ClipperLib::ctUnion, solution, ClipperLib::pftNonZero,
+                         ClipperLib::pftNonZero);
+            ClipperLib::PolyNode* node = solution.GetFirst();
 
+            while (node) {
+                if (!node->IsHole()) {
+                    Array<Polygon*> node_res;
+                    node_res.append(path_to_polygon(node->Contour, scaling));
+                    ClipperLib::PolyNode* child;
+                    for (int child_idx = 0; child_idx < node->ChildCount(); ++child_idx) {
+                        child = node->Childs[child_idx];
+                        node_res.append(path_to_polygon(child->Contour, scaling));
+                        // NOTE If we see polygon that is not a hole here we have
+                        // an issue
+                        if (!child->IsHole()) errorcode = ErrorCode::BooleanError;
+                    }
+                    shape_res.append(&node_res);
+                } else {
+                    node = node->GetNext();
+                }
+            }
+            result.append(&shape_res);
+        }
+    }
+    return errorcode;
+}
 }  // namespace gdstk
