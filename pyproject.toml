@@ -1,6 +1,6 @@
 [project]
 name = "gdstk"
-version = "0.9.42"
+version = "0.9.44"
 authors = [{name = "Lucas H. Gabrielli", email = "heitzmann@gmail.com"}]
 description = "Python module for creation and manipulation of GDSII files."
 readme = "README.md"
@@ -24,7 +24,7 @@ dependencies = [
     "numpy",
     "typing_extensions; python_version < '3.11'"
 ]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 
 [project.optional-dependencies]
 docs = ["sphinx", "sphinx_rtd_theme", "sphinx-inline-tabs", "matplotlib"]
@@ -44,3 +44,29 @@ requires = [
     "numpy; platform_system=='Darwin'",
     "oldest-supported-numpy; platform_system!='Darwin'",
 ]
+[tool.tbump]
+
+[[tool.tbump.before_commit]]
+cmd = "git add CHANGELOG.md"
+name = "create & check changelog"
+
+[[tool.tbump.file]]
+src = "pyproject.toml"
+
+[[tool.tbump.file]]
+src = "include/gdstk/gdstk.hpp"
+
+[tool.tbump.git]
+message_template = "Bump to {new_version}"
+tag_template = "v{new_version}"
+
+[tool.tbump.version]
+current = "0.9.44"
+regex = '''
+  (?P<major>\d+)
+  \.
+  (?P<minor>\d+)
+  \.
+  (?P<patch>\d+)
+  '''
+
