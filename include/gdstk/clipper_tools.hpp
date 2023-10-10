@@ -80,6 +80,10 @@ inline ErrorCode offset(const Polygon& poly, double distance, OffsetJoin join, d
 ErrorCode slice(const Polygon& polygon, const Array<double>& positions, bool x_axis, double scaling,
                 Array<Polygon*>* result);
 
+// Finds holes in a set of polygons with an option to select if you want individual
+// calculation of holes per polygon passed to the function
+ErrorCode complete_holes(const Array<Polygon*>& polygons, bool use_union, double scaling,
+                         Array<Array<Array<Polygon*>*>*>& result);
 }  // namespace gdstk
 
 #endif
