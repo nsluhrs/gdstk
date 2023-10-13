@@ -1107,7 +1107,8 @@ static PyObject* holes_function(PyObject* mod, PyObject* args, PyObject* kwds) {
     if (parse_polygons(py_polygons, polygon_array, "polygons") < 0) return NULL;
 
     Array<Array<Array<Polygon*>*>*> result_array = {};
-    ErrorCode error_code = holes(polygon_array, use_union > 0, 1 / precision, result_array);
+    ErrorCode error_code =
+        complete_holes(polygon_array, use_union > 0, 1 / precision, result_array);
 
     if (return_error(error_code)) {
         for (uint64_t j = 0; j < polygon_array.count; j++) {
@@ -1115,9 +1116,17 @@ static PyObject* holes_function(PyObject* mod, PyObject* args, PyObject* kwds) {
             free_allocation(polygon_array[j]);
         }
         polygon_array.clear();
-        for (uint64_t j = 0; j < result_array.count; j++) {
-            result_array[j]->clear();
-            free_allocation(result_array[j]);
+        for (uint64_t i = 0; i < result_array.count; i++) {
+            for (uint64_t j = 0; j < result_array[i].count; j++) {
+                for (uint64_t k = 0; k < result_array[i][j].count; k++) {
+                    result_array[i][j][k]->clear();
+                    free_allocation(result_array[i][j][k]);
+                }
+                result_array[i][j]->clear();
+                free_allocation(result_array[i][j])
+            }
+            result_array[i]->clear();
+            free_allocation(result_array[i]);
         }
         result_array.clear();
         return NULL;
@@ -1125,6 +1134,12 @@ static PyObject* holes_function(PyObject* mod, PyObject* args, PyObject* kwds) {
 
     Tag tag = make_tag(layer, datatype);
     PyObject* result = PyList_New(result_array.count);
+    // TODO: this needs to be conditional on if layer and datatype is passed, look at cell object's
+    // get polygons
+    for (uint64_t i = 0; i < result_array.count; i++) {
+        tag = polygon_array[i]->tag;  // specifically this line should be conditional
+        PyObject* shape_result = PyList_
+    }
     for (uint64_t i = 0; i < result_array.count; i++) {
         Polygon* poly = result_array[i];
         PolygonObject* obj = PyObject_New(PolygonObject, &polygon_object_type);
