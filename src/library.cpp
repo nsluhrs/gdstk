@@ -5,6 +5,9 @@ Boost Software License - Version 1.0.  See the accompanying
 LICENSE file or <http://www.boost.org/LICENSE_1_0.txt>
 */
 
+#define __STDC_FORMAT_MACROS 1
+#define _USE_MATH_DEFINES
+
 #include <float.h>
 #include <inttypes.h>
 #include <math.h>
@@ -1420,43 +1423,41 @@ Library read_oas(const char* filename, double unit, double tolerance, ErrorCode*
     // Elements
     Cell* cell = NULL;
 
-#ifndef NDEBUG
-    const char* oasis_record_names[] = {"PAD",
-                                        "START",
-                                        "END",
-                                        "CELLNAME_IMPLICIT",
-                                        "CELLNAME",
-                                        "TEXTSTRING_IMPLICIT",
-                                        "TEXTSTRING",
-                                        "PROPNAME_IMPLICIT",
-                                        "PROPNAME",
-                                        "PROPSTRING_IMPLICIT",
-                                        "PROPSTRING",
-                                        "LAYERNAME_DATA",
-                                        "LAYERNAME_TEXT",
-                                        "CELL_REF_NUM",
-                                        "CELL",
-                                        "XYABSOLUTE",
-                                        "XYRELATIVE",
-                                        "PLACEMENT",
-                                        "PLACEMENT_TRANSFORM",
-                                        "TEXT",
-                                        "RECTANGLE",
-                                        "POLYGON",
-                                        "PATH",
-                                        "TRAPEZOID_AB",
-                                        "TRAPEZOID_A",
-                                        "TRAPEZOID_B",
-                                        "CTRAPEZOID",
-                                        "CIRCLE",
-                                        "PROPERTY",
-                                        "LAST_PROPERTY",
-                                        "XNAME_IMPLICIT",
-                                        "XNAME",
-                                        "XELEMENT",
-                                        "XGEOMETRY",
-                                        "CBLOCK"};
-#endif
+    // const char* oasis_record_names[] = {"PAD",
+    //                                     "START",
+    //                                     "END",
+    //                                     "CELLNAME_IMPLICIT",
+    //                                     "CELLNAME",
+    //                                     "TEXTSTRING_IMPLICIT",
+    //                                     "TEXTSTRING",
+    //                                     "PROPNAME_IMPLICIT",
+    //                                     "PROPNAME",
+    //                                     "PROPSTRING_IMPLICIT",
+    //                                     "PROPSTRING",
+    //                                     "LAYERNAME_DATA",
+    //                                     "LAYERNAME_TEXT",
+    //                                     "CELL_REF_NUM",
+    //                                     "CELL",
+    //                                     "XYABSOLUTE",
+    //                                     "XYRELATIVE",
+    //                                     "PLACEMENT",
+    //                                     "PLACEMENT_TRANSFORM",
+    //                                     "TEXT",
+    //                                     "RECTANGLE",
+    //                                     "POLYGON",
+    //                                     "PATH",
+    //                                     "TRAPEZOID_AB",
+    //                                     "TRAPEZOID_A",
+    //                                     "TRAPEZOID_B",
+    //                                     "CTRAPEZOID",
+    //                                     "CIRCLE",
+    //                                     "PROPERTY",
+    //                                     "LAST_PROPERTY",
+    //                                     "XNAME_IMPLICIT",
+    //                                     "XNAME",
+    //                                     "XELEMENT",
+    //                                     "XGEOMETRY",
+    //                                     "CBLOCK"};
 
     OasisRecord record;
     while ((error_code == NULL || *error_code == ErrorCode::NoError) &&
