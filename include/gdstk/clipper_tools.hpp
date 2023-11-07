@@ -72,6 +72,15 @@ inline ErrorCode offset(const Polygon& poly, double distance, OffsetJoin join, d
     const Array<Polygon*> polys = {1, 1, (Polygon**)&p};
     return offset(polys, distance, join, tolerance, scaling, use_union, result);
 }
+// Find holes in polyhgons
+ErrorCode complete_holes(const Array<Polygon*>& polygons, bool use_union, double scaling,
+                         Array<Array<Array<Polygon*>*>*>& result);
+inline ErrorCode complete_holes(const Polygon& poly, bool use_union, double scaling,
+                                Array<Array<Array<Polygon*>*>*>& result) {
+    const Polygon* p = &poly;
+    const Array<Polygon*> polys = {1, 1, (Polygon**)&p};
+    return complete_holes(polys, use_union, scaling, result);
+}
 
 // Slice the given polygon along the coordinates in positions.  Positions must be sorted.  Cuts are
 // vertical (horizontal) when x_axis is set to true (false).  Argument result must be an array with
@@ -80,10 +89,6 @@ inline ErrorCode offset(const Polygon& poly, double distance, OffsetJoin join, d
 ErrorCode slice(const Polygon& polygon, const Array<double>& positions, bool x_axis, double scaling,
                 Array<Polygon*>* result);
 
-// Finds holes in a set of polygons with an option to select if you want individual
-// calculation of holes per polygon passed to the function
-ErrorCode complete_holes(const Array<Polygon*>& polygons, bool use_union, double scaling,
-                         Array<Array<Array<Polygon*>*>*>& result);
 }  // namespace gdstk
 
 #endif

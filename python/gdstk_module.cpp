@@ -1090,24 +1090,25 @@ static PyObject* offset_function(PyObject* mod, PyObject* args, PyObject* kwds) 
 
     return result;
 }
-
 static PyObject* holes_function(PyObject* mod, PyObject* args, PyObject* kwds) {
     PyObject* py_polygons;
     int use_union = 0;
-    unsigned long layer = 0;
-    unsigned long datatype = 0;
+    PyObject* py_layer = Py_None;
+    PyObject* py_datatype = Py_None;
+    double precision = 0.001;
     const char* keywords[] = {"polygons", "use_union", "layer", "datatype", NULL};
     // todo: update this to read "Od|pkk" instead and strip out distance, join, tollerance and
     // precision DONE!
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "Od|pkk:holes", (char**)keywords, &py_polygons,
-                                     &use_union, &layer, &datatype))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "Od|pOO:holes", (char**)keywords, &py_polygons,
+                                     &use_union, &py_layer, &py_datatype))
         return NULL;
 
+    Array<Array<Array<Polygon*>*>*> result_array = {};
     Array<Polygon*> polygon_array = {};
     if (parse_polygons(py_polygons, polygon_array, "polygons") < 0) return NULL;
 
-    Array<Array<Array<Polygon*>*>*> result_array = {};
-    ErrorCode error_code = holes(polygon_array, use_union > 0, 1 / precision, result_array);
+    ErrorCode error_code =
+        complete_holes(polygon_array, use_union > 0, 1 / precision, result_array);
 
     if (return_error(error_code)) {
         for (uint64_t j = 0; j < polygon_array.count; j++) {
@@ -1115,33 +1116,62 @@ static PyObject* holes_function(PyObject* mod, PyObject* args, PyObject* kwds) {
             free_allocation(polygon_array[j]);
         }
         polygon_array.clear();
-        for (uint64_t j = 0; j < result_array.count; j++) {
-            result_array[j]->clear();
-            free_allocation(result_array[j]);
+        for (uint64_t i = 0; i < result_array.count; i++) {
+            Array<Array<Polygon*>*> result_array_b = *result_array[i];
+            for (uint64_t j = 0; j < result_array_b.count; j++) {
+                Array<Polygon*> result_array_c = *result_array_b[j];
+                for (uint64_t k = 0; k < result_array_c.count; k++) {
+                    result_array_c[k]->clear();
+                    free_allocation(result_array_c[k]);
+                }
+                result_array_c.clear();
+                // free_allocation(result_array[i][j]); // perhaps I don't need this??
+            }
+            result_array_b.clear();
+            // free_allocation(result_array[i]); //perhaps I don't need this either
         }
         result_array.clear();
         return NULL;
     }
 
-    Tag tag = make_tag(layer, datatype);
+    // Tag tag = make_tag(layer, datatype);
     PyObject* result = PyList_New(result_array.count);
+    // TODO: this needs to be conditional on if layer and datatype is passed, look at cell object's
+    // get polygons
     for (uint64_t i = 0; i < result_array.count; i++) {
-        Polygon* poly = result_array[i];
-        PolygonObject* obj = PyObject_New(PolygonObject, &polygon_object_type);
-        obj = (PolygonObject*)PyObject_Init((PyObject*)obj, &polygon_object_type);
-        obj->polygon = poly;
-        poly->tag = tag;
-        poly->owner = obj;
-        PyList_SET_ITEM(result, i, (PyObject*)obj);
+        Tag tag = polygon_array[i]->tag;  // specifically this line should be conditional
+        PyObject* shape_result = PyList_New(result_array[i]->count);
+        PyList_SET_ITEM(result, i, shape_result);
+
+        Array<Array<Polygon*>*> result_array_b = *result_array[i];
+
+        for (uint64_t j = 0; j < result_array_b.count; j++) {
+            Array<Polygon*> result_array_c = *result_array_b[j];
+            PyObject* tree_result = PyList_New(result_array_c.count);
+            PyList_SET_ITEM(shape_result, j, tree_result);
+            for (uint64_t k = 0; k < result_array_c.count; k++) {
+                Polygon* poly = result_array_c[k];
+                PolygonObject* obj = PyObject_New(PolygonObject, &polygon_object_type);
+                obj = (PolygonObject*)PyObject_Init((PyObject*)obj, &polygon_object_type);
+                obj->polygon = poly;
+                poly->tag =
+                    tag;  // this might be a problem because I am using the tag multiple times
+                poly->owner = obj;
+                PyList_SET_ITEM(shape_result, k, (PyObject*)obj);
+                result_array_c[k]->clear();
+                free_allocation(result_array_c[k]);
+            }
+            result_array_c.clear();
+        }
+        result_array_b.clear();
     }
 
+    result_array.clear();
     for (uint64_t j = 0; j < polygon_array.count; j++) {
         polygon_array[j]->clear();
         free_allocation(polygon_array[j]);
     }
     polygon_array.clear();
-    result_array.clear();
-
     return result;
 }
 

@@ -390,5 +390,4 @@ ErrorCode complete_holes(const Array<Polygon*>& polygons, bool use_union, double
     }
     return errorcode;
 }
-// ErrorCode holes()
 }  // namespace gdstk

@@ -20,7 +20,7 @@ class CMakeBuilder(build_ext):
         build_dir = pathlib.Path(self.build_temp).absolute() / "cmake_build"
         install_dir = build_dir / "install"
 
-        config = "Debug" if self.debug else "Release"
+        config = "Debug" #if self.debug else "Release"
 
         build_dir.mkdir(parents=True, exist_ok=True)
         self.spawn(
