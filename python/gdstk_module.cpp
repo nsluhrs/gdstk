@@ -1099,14 +1099,14 @@ static PyObject* holes_function(PyObject* mod, PyObject* args, PyObject* kwds) {
     const char* keywords[] = {"polygons", "use_union", "layer", "datatype", NULL};
     // todo: update this to read "Od|pkk" instead and strip out distance, join, tollerance and
     // precision DONE!
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "Od|pOO:holes", (char**)keywords, &py_polygons,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|pOO:holes", (char**)keywords, &py_polygons,
                                      &use_union, &py_layer, &py_datatype))
         return NULL;
 
     Array<Array<Array<Polygon*>*>*> result_array = {};
     Array<Polygon*> polygon_array = {};
     if (parse_polygons(py_polygons, polygon_array, "polygons") < 0) return NULL;
-
+    printf("num polygons %lu", polygon_array.count);
     ErrorCode error_code =
         complete_holes(polygon_array, use_union > 0, 1 / precision, result_array);
 

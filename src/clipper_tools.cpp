@@ -333,14 +333,14 @@ ErrorCode complete_holes(const Array<Polygon*>& polygons, bool use_union, double
         ClipperLib::PolyTree solution;
         clpr.Execute(ClipperLib::ctUnion, solution, ClipperLib::pftNonZero, ClipperLib::pftNonZero);
         ClipperLib::PolyNode* node = solution.GetFirst();
-        Array<Array<Polygon*>*> shape_res;
+        Array<Array<Polygon*>*> shape_res = {};
         // grabs every non-hole polygon and their corresponding holes
         // First element is the outer shape 2nd and onward is holes
         // Cases with shapes in holes or orther messy things will be
         // separated out into different insnstances
         while (node) {
             if (!node->IsHole()) {
-                Array<Polygon*> node_res;
+                Array<Polygon*> node_res = {};
                 node_res.append(path_to_polygon(node->Contour, scaling));
                 ClipperLib::PolyNode* child;
                 for (int child_idx = 0; child_idx < node->ChildCount(); ++child_idx) {
@@ -351,16 +351,15 @@ ErrorCode complete_holes(const Array<Polygon*>& polygons, bool use_union, double
                     if (!child->IsHole()) errorcode = ErrorCode::BooleanError;
                 }
                 shape_res.append(&node_res);
-            } else {
-                node = node->GetNext();
             }
+            node = node->GetNext();
         }
         result.append(&shape_res);
     } else {
         for (ClipperLib::Paths::size_type i = 0; i < original_polys.size(); ++i) {
             ClipperLib::Clipper clpr;
             clpr.AddPath(original_polys[i], ClipperLib::ptSubject, true);
-            Array<Array<Polygon*>*> shape_res;
+            Array<Array<Polygon*>*> shape_res = {};
             ClipperLib::PolyTree solution;
             clpr.Execute(ClipperLib::ctUnion, solution, ClipperLib::pftNonZero,
                          ClipperLib::pftNonZero);
@@ -370,7 +369,7 @@ ErrorCode complete_holes(const Array<Polygon*>& polygons, bool use_union, double
 
             while (node) {
                 if (!node->IsHole()) {
-                    Array<Polygon*> node_res;
+                    Array<Polygon*> node_res = {};
                     node_res.append(path_to_polygon(node->Contour, scaling));
                     ClipperLib::PolyNode* child;
                     for (int child_idx = 0; child_idx < node->ChildCount(); ++child_idx) {
@@ -381,9 +380,8 @@ ErrorCode complete_holes(const Array<Polygon*>& polygons, bool use_union, double
                         if (!child->IsHole()) errorcode = ErrorCode::BooleanError;
                     }
                     shape_res.append(&node_res);
-                } else {
-                    node = node->GetNext();
                 }
+                node = node->GetNext();
             }
             result.append(&shape_res);
         }
