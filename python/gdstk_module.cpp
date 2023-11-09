@@ -1140,10 +1140,9 @@ static PyObject* holes_function(PyObject* mod, PyObject* args, PyObject* kwds) {
     // get polygons
     for (uint64_t i = 0; i < result_array.count; i++) {
         Tag tag = polygon_array[i]->tag;  // specifically this line should be conditional
-        PyObject* shape_result = PyList_New(result_array[i]->count);
-        PyList_SET_ITEM(result, i, shape_result);
-
         Array<Array<Polygon*>*> result_array_b = *result_array[i];
+        PyObject* shape_result = PyList_New(result_array_b.count);
+        PyList_SET_ITEM(result, i, shape_result);
 
         for (uint64_t j = 0; j < result_array_b.count; j++) {
             Array<Polygon*> result_array_c = *result_array_b[j];
@@ -1157,13 +1156,13 @@ static PyObject* holes_function(PyObject* mod, PyObject* args, PyObject* kwds) {
                 poly->tag =
                     tag;  // this might be a problem because I am using the tag multiple times
                 poly->owner = obj;
-                PyList_SET_ITEM(shape_result, k, (PyObject*)obj);
-                result_array_c[k]->clear();
-                free_allocation(result_array_c[k]);
+                PyList_SET_ITEM(tree_result, k, (PyObject*)obj);
+                // result_array_c[k]->clear();
+                // free_allocation(result_array_c[k]);
             }
-            result_array_c.clear();
+            // result_array_c.clear();
         }
-        result_array_b.clear();
+        // result_array_b.clear();
     }
 
     result_array.clear();
