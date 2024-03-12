@@ -392,6 +392,13 @@ Polygon area.
 Returns:
     Area of the polygon.)!");
 
+PyDoc_STRVAR(polygon_object_perimeter_doc, R"!(perimeter() -> float
+
+Polygon perimeter.
+
+Returns:
+    Perimeter of the polygon.)!");
+
 PyDoc_STRVAR(polygon_object_bounding_box_doc, R"!(bounding_box() -> tuple
 
 Calculate the polygon bounding box.
@@ -2696,7 +2703,7 @@ Notes:
     over them with `get_dependencies`.  To remap a whole libarry, use
     `Library.remap`.)!");
 
-PyDoc_STRVAR(cell_object_dependencies_doc, R"!(dependencies(recursive) -> list
+PyDoc_STRVAR(cell_object_dependencies_doc, R"!(dependencies(recursive=True) -> list
 
 List of cells and raw cells that are referenced by this cell.
 

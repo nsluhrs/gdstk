@@ -1,6 +1,19 @@
 # Changelog
 
-## Unreleased
+## 0.9.50 - 2024-02-07
+### Added
+- `Polygon.perimeter`.
+
+## 0.9.49 - 2023-12-29
+### Fixed
+- Type annotation for `Cell.write_svg`.
+
+## 0.9.48 - 2023-12-21
+### Changed
+- `Cell.dependencies` accepts keyword arguments.
+### Fixed
+- Fracturing polygons with few points is more robust.
+- Compilation improvements.
 
 ## 0.9.45 - 2023-10-12
 ### Changed
