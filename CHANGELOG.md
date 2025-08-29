@@ -1,10 +1,93 @@
 # Changelog
 
-## Unreleased
+## 0.9.61 - 2025-08-28
+### Added
+- Support for non-standard repetition vectors in GDSII (#293, #299, thanks svollenweider, WesYu).
+### Fixed
+- Bug in OASIS output when using explicit repetitions (#307, thanks RedFalsh).
+- Time stamp format in GDSII (#308, thanks albachten).
+
+## 0.9.60 - 2025-04-15
+### Fixed
+- Added support to 32-bit layers and datatypes.
+
+## 0.9.59 - 2025-02-11
+### Fixed
+- Treat string properties as binary byte arrays in OASIS.
+
+## 0.9.58 - 2024-11-25
+### Changed
+- Empty paths now give a warning when being converted to polygons or stored in GDSII/OASIS.
+### Fixed
+- Missing paths when vertices were separated exactly by the tolerance (#277)
+
+## 0.9.57 - 2024-11-07
+### Fixed
+- Bug when removing GDSII properties (#276, thanks jatoben).
+
+## 0.9.56 - 2024-10-28
+### Added
+- Support for Python 3.13.
+### Fixed
+- Copy Raith data in `Cell::get_flexpaths`.
+
+## 0.9.55 - 2024-08-31
+### Fixed
+- Memory bug fix for Raith data
+
+## 0.9.54 - 2024-08-31
+### Changed
+- Dropped unnecessary dependencies
+### Fixed
+- Trapezoid loading bug in OASIS format
+
+## 0.9.53 - 2024-07-04
+### Added
+- Support for Raith MBMS path data (thanks Matthew Mckee).
+- Support for numpy 2.0
+### Changed
+- Dropped support for python 3.8
+### Fixed
+- Qhull maximal number of points.
+
+## 0.9.52 - 2024-04-18
+### Fixed
+- Infinite loop in `Cell::remap_tags` (#246, thanks dtzitkas!)
+- Install headers when targeting the C++ library (#245)
+
+## 0.9.51 - 2024-04-17
+### Changed
+- Use scikit-build-core for building, which enables support for Python 3.12 on Windows.
+
+## 0.9.50 - 2024-02-07
+### Added
+- `Polygon.perimeter`.
+
+## 0.9.49 - 2023-12-29
+### Fixed
+- Type annotation for `Cell.write_svg`.
+
+## 0.9.48 - 2023-12-21
+### Changed
+- `Cell.dependencies` accepts keyword arguments.
+### Fixed
+- Fracturing polygons with few points is more robust.
+- Compilation improvements.
+
+## 0.9.45 - 2023-10-12
+### Changed
+- Use Qhull as an external dependecy instead of installing it ourselves to avoid conflicts.
+
+## 0.9.43 - 2023-10-08
 ### Added
 - `Library.remap` and `Cell.remap` to remap layer and data/text types
+- Add typing stub
+- Add deepcopy support
 ### Changed
 - Raise an error if not both layer and datatype are specified in `Cell.get_polygons` and `Reference.get_polygons`.
+- Correct ordering of path ends in `Library::read_oas()`
+### Fixed
+- Sort `slice` positions when converting from python because the internal implementation expects the coordinates to be sorted
 
 ## 0.9.42 - 2023-06-14
 ### Fixed

@@ -1,71 +1,27 @@
+include(GNUInstallDirs)
+
+
 ## CLIPPER ########################################################
 
 set(clipper_HEADERS clipper/clipper.hpp)
 
-set(clipper_SOURCES clipper/clipper.cpp ${clipper_HEADERS})
+set(clipper_SOURCES clipper/clipper.cpp)
 
-add_library(clipper ${clipper_SOURCES})
+add_library(clipper ${clipper_SOURCES} ${clipper_HEADERS})
 
 if(UNIX)
     target_link_libraries(clipper m)
 endif(UNIX)
 
-set_target_properties(clipper PROPERTIES
-    POSITION_INDEPENDENT_CODE ON
-    PUBLIC_HEADER "${clipper_HEADERS}")
+set_target_properties(clipper PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-include(GNUInstallDirs)
+target_compile_features(clipper PRIVATE cxx_std_11)
+
+target_include_directories(clipper PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+
 install(TARGETS clipper
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/clipper)
-
-
-## QHULL ##########################################################
-
-set(libqhullr_HEADERS
-    qhull/src/libqhull_r/libqhull_r.h
-    qhull/src/libqhull_r/geom_r.h
-    qhull/src/libqhull_r/io_r.h
-    qhull/src/libqhull_r/mem_r.h
-    qhull/src/libqhull_r/merge_r.h
-    qhull/src/libqhull_r/poly_r.h
-    qhull/src/libqhull_r/qhull_ra.h
-    qhull/src/libqhull_r/qset_r.h
-    qhull/src/libqhull_r/random_r.h
-    qhull/src/libqhull_r/stat_r.h
-    qhull/src/libqhull_r/user_r.h)
-
-set(libqhullr_SOURCES
-    qhull/src/libqhull_r/global_r.c
-    qhull/src/libqhull_r/stat_r.c
-    qhull/src/libqhull_r/geom2_r.c
-    qhull/src/libqhull_r/poly2_r.c
-    qhull/src/libqhull_r/merge_r.c
-    qhull/src/libqhull_r/libqhull_r.c
-    qhull/src/libqhull_r/geom_r.c
-    qhull/src/libqhull_r/poly_r.c
-    qhull/src/libqhull_r/qset_r.c
-    qhull/src/libqhull_r/mem_r.c
-    qhull/src/libqhull_r/random_r.c
-    qhull/src/libqhull_r/usermem_r.c
-    qhull/src/libqhull_r/userprintf_r.c
-    qhull/src/libqhull_r/io_r.c
-    qhull/src/libqhull_r/user_r.c
-    qhull/src/libqhull_r/rboxlib_r.c
-    qhull/src/libqhull_r/userprintf_rbox_r.c
-    ${libqhullr_HEADERS})
-
-add_library(qhullstatic_r ${libqhullr_SOURCES})
-
-if(UNIX)
-    target_link_libraries(qhullstatic_r m)
-endif(UNIX)
-
-set_target_properties(qhullstatic_r PROPERTIES
-    POSITION_INDEPENDENT_CODE ON
-    PUBLIC_HEADER "${libqhullr_HEADERS}")
-
-include(GNUInstallDirs)
-install(TARGETS qhullstatic_r
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libqhull_r)
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

@@ -392,6 +392,13 @@ Polygon area.
 Returns:
     Area of the polygon.)!");
 
+PyDoc_STRVAR(polygon_object_perimeter_doc, R"!(perimeter() -> float
+
+Polygon perimeter.
+
+Returns:
+    Perimeter of the polygon.)!");
+
 PyDoc_STRVAR(polygon_object_bounding_box_doc, R"!(bounding_box() -> tuple
 
 Calculate the polygon bounding box.
@@ -788,6 +795,44 @@ PyDoc_STRVAR(reference_object_rotation_doc, R"!(Reference rotation angle (in rad
 PyDoc_STRVAR(reference_object_magnification_doc, R"!(Reference magnification.)!");
 
 PyDoc_STRVAR(reference_object_x_reflection_doc, R"!(Reference reflection across the x axis.)!");
+
+// RaithData
+
+PyDoc_STRVAR(
+    raithdata_object_type_doc,
+    R"!(RaithData(base_cell_name, dwelltime_selection=0, pitch_parallel_to_path=0, pitch_perpendicular_to_path=0, pitch_scale=0, periods=0, grating_type=0, dots_per_cycle=0)
+
+Raith electron beam lithography data for MBMS paths.
+
+Args:
+    base_cell_name (str): Base cell name.
+    dwelltime_selection (int): Dwell time selection.
+    pitch_parallel_to_path (float): Pitch parallel to path.
+    pitch_perpendicular_to_path (float): Pitch perpendicular to path.
+    pitch_scale (float): Pitch scale.
+    periods (int): Number of periods.
+    grating_type (int): Graing type.
+    dots_per_cycle (int): Number of dots per cycle.
+
+Notes:
+    All attributes of RaithData objects are read-only.)!");
+
+
+PyDoc_STRVAR(raithdata_object_dwelltime_selection_doc, R"!(Dwell time selection.)!");
+
+PyDoc_STRVAR(raithdata_object_pitch_parallel_to_path_doc, R"!(Pitch parallel to path.)!");
+
+PyDoc_STRVAR(raithdata_object_pitch_perpendicular_to_path_doc, R"!(Pitch perpendicular to path.)!");
+
+PyDoc_STRVAR(raithdata_object_pitch_scale_doc, R"!(Pitch scale.)!");
+
+PyDoc_STRVAR(raithdata_object_periods_doc, R"!(Number of periods.)!");
+
+PyDoc_STRVAR(raithdata_object_grating_type_doc, R"!(Grating type.)!");
+
+PyDoc_STRVAR(raithdata_object_dots_per_cycle_doc, R"!(Number of dots per cycle.)!");
+
+PyDoc_STRVAR(raithdata_object_base_cell_name_doc, R"!(Base cell name.)!");
 
 // FlexPath
 
@@ -1542,6 +1587,8 @@ PyDoc_STRVAR(path_object_tolerance_doc, R"!(Path tolerance.)!");
 PyDoc_STRVAR(path_object_simple_path_doc, R"!(Simple path flag.)!");
 
 PyDoc_STRVAR(path_object_scale_width_doc, R"!(Scale width flag.)!");
+
+PyDoc_STRVAR(flexpath_object_raith_data_doc, R"!(Raith electron beam lithography data.)!");
 
 // RobustPath
 
@@ -2346,7 +2393,6 @@ Args:
 Returns:
     Copy of this label.)!");
 
-
 PyDoc_STRVAR(label_object_apply_repetition_doc, R"!(apply_repetition() -> list
 
 Create new labels based on this object's ``repetition`` attribute.
@@ -2696,7 +2742,7 @@ Notes:
     over them with `get_dependencies`.  To remap a whole libarry, use
     `Library.remap`.)!");
 
-PyDoc_STRVAR(cell_object_dependencies_doc, R"!(dependencies(recursive) -> list
+PyDoc_STRVAR(cell_object_dependencies_doc, R"!(dependencies(recursive=True) -> list
 
 List of cells and raw cells that are referenced by this cell.
 

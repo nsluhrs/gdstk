@@ -1943,8 +1943,9 @@ static PyObject* flexpath_object_delete_property(FlexPathObject* self, PyObject*
 static PyObject* flexpath_object_set_gds_property(FlexPathObject* self, PyObject* args) {
     uint16_t attribute;
     char* value;
-    if (!PyArg_ParseTuple(args, "Hs:set_gds_property", &attribute, &value)) return NULL;
-    set_gds_property(self->flexpath->properties, attribute, value);
+    Py_ssize_t count;
+    if (!PyArg_ParseTuple(args, "Hs#:set_gds_property", &attribute, &value, &count)) return NULL;
+    if (count >= 0) set_gds_property(self->flexpath->properties, attribute, value, (uint64_t)count);
     Py_INCREF(self);
     return (PyObject*)self;
 }
@@ -1957,7 +1958,13 @@ static PyObject* flexpath_object_get_gds_property(FlexPathObject* self, PyObject
         Py_INCREF(Py_None);
         return Py_None;
     }
-    return PyUnicode_FromString((char*)value->bytes);
+    PyObject* result = PyUnicode_FromStringAndSize((char*)value->bytes, (Py_ssize_t)value->count);
+    if (PyErr_Occurred()) {
+        Py_XDECREF(result);
+        PyErr_Clear();
+        result = PyBytes_FromStringAndSize((char*)value->bytes, (Py_ssize_t)value->count);
+    }
+    return result;
 }
 
 static PyObject* flexpath_object_delete_gds_property(FlexPathObject* self, PyObject* args) {
@@ -1970,7 +1977,8 @@ static PyObject* flexpath_object_delete_gds_property(FlexPathObject* self, PyObj
 
 static PyMethodDef flexpath_object_methods[] = {
     {"copy", (PyCFunction)flexpath_object_copy, METH_NOARGS, flexpath_object_copy_doc},
-    {"__deepcopy__", (PyCFunction)flexpath_object_deepcopy, METH_VARARGS | METH_KEYWORDS, flexpath_object_deepcopy_doc},
+    {"__deepcopy__", (PyCFunction)flexpath_object_deepcopy, METH_VARARGS | METH_KEYWORDS,
+     flexpath_object_deepcopy_doc},
     {"spine", (PyCFunction)flexpath_object_spine, METH_NOARGS, flexpath_object_spine_doc},
     {"path_spines", (PyCFunction)flexpath_object_path_spines, METH_NOARGS,
      flexpath_object_path_spines_doc},
@@ -2293,6 +2301,28 @@ int flexpath_object_set_repetition(FlexPathObject* self, PyObject* arg, void*) {
     return 0;
 }
 
+static PyObject* flexpath_object_get_raith_data(FlexPathObject* self, void*) {
+    RaithDataObject* obj = PyObject_New(RaithDataObject, &raithdata_object_type);
+    obj = (RaithDataObject*)PyObject_Init((PyObject*)obj, &raithdata_object_type);
+    obj->raith_data.base_cell_name = NULL;
+    obj->raith_data.copy_from(self->flexpath->raith_data);
+    return (PyObject*)obj;
+}
+
+int flexpath_object_set_raith_data(FlexPathObject* self, PyObject* arg, void*) {
+    if (arg == Py_None) {
+        self->flexpath->raith_data.clear();
+        return 0;
+    }
+    if (!RaithDataObject_Check(arg)) {
+        PyErr_SetString(PyExc_TypeError, "Value must be a RaithData object.");
+        return -1;
+    }
+    RaithDataObject* raith_data_obj = (RaithDataObject*)arg;
+    self->flexpath->raith_data.copy_from(raith_data_obj->raith_data);
+    return 0;
+}
+
 static PyGetSetDef flexpath_object_getset[] = {
     {"layers", (getter)flexpath_object_get_layers, NULL, flexpath_object_layers_doc, NULL},
     {"datatypes", (getter)flexpath_object_get_datatypes, NULL, flexpath_object_datatypes_doc, NULL},
@@ -2314,4 +2344,6 @@ static PyGetSetDef flexpath_object_getset[] = {
      object_properties_doc, NULL},
     {"repetition", (getter)flexpath_object_get_repetition, (setter)flexpath_object_set_repetition,
      object_repetition_doc, NULL},
+    {"raith_data", (getter)flexpath_object_get_raith_data, (setter)flexpath_object_set_raith_data,
+     flexpath_object_raith_data_doc, NULL},
     {NULL}};

@@ -5,6 +5,9 @@ Boost Software License - Version 1.0.  See the accompanying
 LICENSE file or <http://www.boost.org/LICENSE_1_0.txt>
 */
 
+#define __STDC_FORMAT_MACROS 1
+#define _USE_MATH_DEFINES
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -204,16 +207,16 @@ void set_property(Property*& properties, const char* name, const uint8_t* bytes,
     memcpy(value->bytes, bytes, count);
 }
 
-void set_gds_property(Property*& properties, uint16_t attribute, const char* value) {
+void set_gds_property(Property*& properties, uint16_t attribute, const char* value, uint64_t count) {
     PropertyValue* gds_attribute;
     PropertyValue* gds_value;
     Property* property = properties;
     for (; property; property = property->next) {
         if (is_gds_property(property) && property->value->unsigned_integer == attribute) {
             gds_value = property->value->next;
-            gds_value->count = strlen(value) + 1;
-            gds_value->bytes = (uint8_t*)reallocate(gds_value->bytes, gds_value->count);
-            memcpy(gds_value->bytes, value, gds_value->count);
+            gds_value->count = count;
+            gds_value->bytes = (uint8_t*)reallocate(gds_value->bytes, count);
+            memcpy(gds_value->bytes, value, count);
             return;
         }
     }
@@ -223,7 +226,9 @@ void set_gds_property(Property*& properties, uint16_t attribute, const char* val
     gds_attribute->unsigned_integer = attribute;
     gds_attribute->next = gds_value;
     gds_value->type = PropertyType::String;
-    gds_value->bytes = (uint8_t*)copy_string(value, &gds_value->count);
+    gds_value->bytes = (uint8_t*)allocate(count);
+    memcpy(gds_value->bytes, value, count);
+    gds_value->count = count;
     gds_value->next = NULL;
     property = (Property*)allocate(sizeof(Property));
     property->name = (char*)allocate(COUNT(s_gds_property_name));
@@ -274,7 +279,7 @@ bool remove_gds_property(Property*& properties, uint16_t attribute) {
     }
     Property* property = properties;
     while (property->next &&
-           (!is_gds_property(property->next) || property->value->unsigned_integer != attribute))
+           (!is_gds_property(property->next) || property->next->value->unsigned_integer != attribute))
         property = property->next;
     if (property->next) {
         Property* rem = property->next;
