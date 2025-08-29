@@ -403,8 +403,9 @@ static PyObject* polygon_object_delete_property(PolygonObject* self, PyObject* a
 static PyObject* polygon_object_set_gds_property(PolygonObject* self, PyObject* args) {
     uint16_t attribute;
     char* value;
-    if (!PyArg_ParseTuple(args, "Hs:set_gds_property", &attribute, &value)) return NULL;
-    set_gds_property(self->polygon->properties, attribute, value);
+    Py_ssize_t count;
+    if (!PyArg_ParseTuple(args, "Hs#:set_gds_property", &attribute, &value, &count)) return NULL;
+    if (count >= 0) set_gds_property(self->polygon->properties, attribute, value, (uint64_t)count);
     Py_INCREF(self);
     return (PyObject*)self;
 }
@@ -417,7 +418,13 @@ static PyObject* polygon_object_get_gds_property(PolygonObject* self, PyObject* 
         Py_INCREF(Py_None);
         return Py_None;
     }
-    return PyUnicode_FromString((char*)value->bytes);
+    PyObject* result = PyUnicode_FromStringAndSize((char*)value->bytes, (Py_ssize_t)value->count);
+    if (PyErr_Occurred()) {
+        Py_XDECREF(result);
+        PyErr_Clear();
+        result = PyBytes_FromStringAndSize((char*)value->bytes, (Py_ssize_t)value->count);
+    }
+    return result;
 }
 
 static PyObject* polygon_object_delete_gds_property(PolygonObject* self, PyObject* args) {
@@ -430,7 +437,8 @@ static PyObject* polygon_object_delete_gds_property(PolygonObject* self, PyObjec
 
 static PyMethodDef polygon_object_methods[] = {
     {"copy", (PyCFunction)polygon_object_copy, METH_NOARGS, polygon_object_copy_doc},
-    {"__deepcopy__", (PyCFunction)polygon_object_deepcopy, METH_VARARGS | METH_KEYWORDS, polygon_object_deepcopy_doc},
+    {"__deepcopy__", (PyCFunction)polygon_object_deepcopy, METH_VARARGS | METH_KEYWORDS,
+     polygon_object_deepcopy_doc},
     {"area", (PyCFunction)polygon_object_area, METH_NOARGS, polygon_object_area_doc},
     {"perimeter", (PyCFunction)polygon_object_perimeter, METH_NOARGS, polygon_object_perimeter_doc},
     {"bounding_box", (PyCFunction)polygon_object_bounding_box, METH_NOARGS,
