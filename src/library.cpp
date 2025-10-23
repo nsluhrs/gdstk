@@ -444,7 +444,7 @@ ErrorCode Library::write_oas(const char* filename, double circle_tolerance,
     oasis_putc(1, out);  // flag indicating that table-offsets will be stored in the END record
     
     uint64_t layer_name_offset = layer_names ? ftell(out.file) : 0;
-    layernames_to_oasis(layer_names,out,state)
+    layernames_to_oas(layer_names,out,state);
     
     if (state.config_flags & OASIS_CONFIG_PROPERTY_TOP_LEVEL) {
         remove_property(properties, s_top_level_property_name, true);
@@ -1697,7 +1697,7 @@ Library read_oas(const char* filename, double unit, double tolerance, ErrorCode*
                 property_value_table[ref_number] = ByteArray{len, bytes, NULL};
                 next_property = &property_value_table[ref_number].properties;
             } break;
-            case OasisRecord::LAYERNAME_DATA:
+            case OasisRecord::LAYERNAME_DATA:{
                 uint8_t* name = oasis_read_string(in, true, len);
                 Interval* layertype_interval = (Interval*)allocate_clear(sizeof(Interval));
                 layertype_interval->type = (OasisInterval)oasis_read_unsigned_integer(in);
@@ -1720,7 +1720,7 @@ Library read_oas(const char* filename, double unit, double tolerance, ErrorCode*
                             fprintf(
                                 error_logger,
                                 "[GDSTK] Unsupported layertype interval type %u in LAYERNAME_DATA record.\n",
-                                layertype_interval->type);
+                                (uint32_t)layertype_interval->type);
                         if (error_code) *error_code = ErrorCode::UnsupportedRecord;
                 }
                 Interval* datatype_interval = (Interval*)allocate_clear(sizeof(Interval));
@@ -1744,15 +1744,15 @@ Library read_oas(const char* filename, double unit, double tolerance, ErrorCode*
                             fprintf(
                                 error_logger,
                                 "[GDSTK] Unsupported datatype interval type %u in LAYERNAME_DATA record.\n",
-                                datatype_interval->type);
+                                (uint32_t)datatype_interval->type);
                         if (error_code) *error_code = ErrorCode::UnsupportedRecord;
                 }
                 set_layername(library.layer_names, (char*)name, layertype_interval,
                               datatype_interval);
                 free_allocation(name);
-                break;
-
-            case OasisRecord::LAYERNAME_TEXT:
+                
+            } break;
+            case OasisRecord::LAYERNAME_TEXT:{
                 uint8_t* name = oasis_read_string(in, true, len);
                 Interval* layertype_interval = (Interval*)allocate_clear(sizeof(Interval));
                 layertype_interval->type = (OasisInterval)oasis_read_unsigned_integer(in);
@@ -1775,7 +1775,7 @@ Library read_oas(const char* filename, double unit, double tolerance, ErrorCode*
                             fprintf(
                                 error_logger,
                                 "[GDSTK] Unsupported layertype interval type %u in LAYERNAME_DATA record.\n",
-                                layertype_interval->type);
+                                (uint32_t)layertype_interval->type);
                         if (error_code) *error_code = ErrorCode::UnsupportedRecord;
                 }
                 Interval* datatype_interval = (Interval*)allocate_clear(sizeof(Interval));
@@ -1799,13 +1799,13 @@ Library read_oas(const char* filename, double unit, double tolerance, ErrorCode*
                             fprintf(
                                 error_logger,
                                 "[GDSTK] Unsupported datatype interval type %u in LAYERNAME_DATA record.\n",
-                                datatype_interval->type);
+                                (uint32_t)datatype_interval->type);
                         if (error_code) *error_code = ErrorCode::UnsupportedRecord;
                 }
-                set_text_layername(library.layer_names, (char*)name, layertype_interval,
+                set_textlayername(library.layer_names, (char*)name, layertype_interval,
                                    datatype_interval);
                 free_allocation(name);
-                break;
+            } break;
             case OasisRecord::CELL_REF_NUM:
             case OasisRecord::CELL: {
                 cell = (Cell*)allocate_clear(sizeof(Cell));

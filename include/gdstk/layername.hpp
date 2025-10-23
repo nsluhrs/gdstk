@@ -15,7 +15,7 @@ LICENSE file or <http://www.boost.org/LICENSE_1_0.txt>
 #include <stdio.h>
 
 #include "utils.hpp"
-// #include "oasis.hpp"
+#include "oasis.hpp"
 
 namespace gdstk {
 
