@@ -1,4 +1,4 @@
-## Clipper2 (vendored) — built as an OBJECT library, linked directly into gdstk.
+## Clipper2 (submodule) — built as an OBJECT library, linked directly into gdstk.
 
 set(CLIPPER2_SRC
     Clipper2/CPP/Clipper2Lib/src/clipper.engine.cpp
