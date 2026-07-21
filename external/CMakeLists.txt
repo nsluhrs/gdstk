@@ -4,7 +4,6 @@ set(CLIPPER2_SRC
     Clipper2/CPP/Clipper2Lib/src/clipper.engine.cpp
     Clipper2/CPP/Clipper2Lib/src/clipper.offset.cpp
     Clipper2/CPP/Clipper2Lib/src/clipper.rectclip.cpp
-    Clipper2/CPP/Clipper2Lib/src/clipper.triangulation.cpp
 )
 
 add_library(clipper2 OBJECT ${CLIPPER2_SRC})
