@@ -1329,6 +1329,167 @@ static PyObject* slice_function(PyObject* mod, PyObject* args, PyObject* kwds) {
     return result;
 }
 
+static PyObject* filter_holes_result_tuple(Array<Polygon*>& shells, Array<Polygon*>& holes,
+                                           Tag tag);
+
+static PyObject* filter_holes_function(PyObject* mod, PyObject* args, PyObject* kwds) {
+    PyObject* py_polygons;
+    double precision = 0.001;
+    unsigned long layer = 0;
+    unsigned long datatype = 0;
+    int mapped = 0;
+    const char* keywords[] = {"polygons", "precision", "layer", "datatype", "mapped", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|dkkp:filter_holes", (char**)keywords, &py_polygons,
+                                     &precision, &layer, &datatype, &mapped))
+        return NULL;
+
+    if (precision <= 0) {
+        PyErr_SetString(PyExc_ValueError, "Precision must be positive.");
+        return NULL;
+    }
+
+    Tag tag = make_tag(layer, datatype);
+    double scaling = 1 / precision;
+
+    if (mapped) {
+        if (!PySequence_Check(py_polygons)) {
+            PyErr_SetString(PyExc_TypeError,
+                            "Argument polygons must be a sequence when mapped=True.");
+            return NULL;
+        }
+        Py_ssize_t len = PySequence_Length(py_polygons);
+        PyObject* result = PyList_New(len);
+        if (!result) return NULL;
+
+        for (Py_ssize_t i = 0; i < len; i++) {
+            PyObject* py_item = PySequence_ITEM(py_polygons, i);
+            if (!py_item) {
+                Py_DECREF(result);
+                return NULL;
+            }
+
+            PyObject* temp_list = PyList_New(1);
+            PyList_SET_ITEM(temp_list, 0, py_item);
+
+            Array<Polygon*> item_polygons = {};
+            if (parse_polygons(temp_list, item_polygons, "polygons") < 0) {
+                Py_DECREF(temp_list);
+                Py_DECREF(result);
+                return NULL;
+            }
+            Py_DECREF(temp_list);
+
+            Array<Polygon*> shells = {};
+            Array<Polygon*> holes = {};
+            ErrorCode error_code = filter_holes(item_polygons, scaling, shells, holes);
+
+            for (uint64_t j = 0; j < item_polygons.count; j++) {
+                item_polygons[j]->clear();
+                free_allocation(item_polygons[j]);
+            }
+            item_polygons.clear();
+
+            if (return_error(error_code)) {
+                for (uint64_t j = 0; j < shells.count; j++) {
+                    shells[j]->clear();
+                    free_allocation(shells[j]);
+                }
+                shells.clear();
+                for (uint64_t j = 0; j < holes.count; j++) {
+                    holes[j]->clear();
+                    free_allocation(holes[j]);
+                }
+                holes.clear();
+                Py_DECREF(result);
+                return NULL;
+            }
+
+            PyObject* item_result = filter_holes_result_tuple(shells, holes, tag);
+            shells.clear();
+            holes.clear();
+            if (!item_result) {
+                Py_DECREF(result);
+                return NULL;
+            }
+            PyList_SET_ITEM(result, i, item_result);
+        }
+        return result;
+    }
+
+    Array<Polygon*> polygon_array = {};
+    if (parse_polygons(py_polygons, polygon_array, "polygons") < 0) return NULL;
+
+    Array<Polygon*> shells_array = {};
+    Array<Polygon*> holes_array = {};
+    ErrorCode error_code = filter_holes(polygon_array, scaling, shells_array, holes_array);
+
+    if (return_error(error_code)) {
+        for (uint64_t j = 0; j < polygon_array.count; j++) {
+            polygon_array[j]->clear();
+            free_allocation(polygon_array[j]);
+        }
+        polygon_array.clear();
+        for (uint64_t j = 0; j < shells_array.count; j++) {
+            shells_array[j]->clear();
+            free_allocation(shells_array[j]);
+        }
+        shells_array.clear();
+        for (uint64_t j = 0; j < holes_array.count; j++) {
+            holes_array[j]->clear();
+            free_allocation(holes_array[j]);
+        }
+        holes_array.clear();
+        return NULL;
+    }
+
+    PyObject* result = filter_holes_result_tuple(shells_array, holes_array, tag);
+    shells_array.clear();
+    holes_array.clear();
+
+    for (uint64_t j = 0; j < polygon_array.count; j++) {
+        polygon_array[j]->clear();
+        free_allocation(polygon_array[j]);
+    }
+    polygon_array.clear();
+
+    return result;
+}
+
+static PyObject* filter_holes_result_tuple(Array<Polygon*>& shells, Array<Polygon*>& holes,
+                                           Tag tag) {
+    PyObject* py_shells = PyList_New(shells.count);
+    if (!py_shells) return NULL;
+    for (uint64_t i = 0; i < shells.count; i++) {
+        Polygon* poly = shells[i];
+        PolygonObject* obj = PyObject_New(PolygonObject, &polygon_object_type);
+        obj = (PolygonObject*)PyObject_Init((PyObject*)obj, &polygon_object_type);
+        obj->polygon = poly;
+        poly->tag = tag;
+        poly->owner = obj;
+        PyList_SET_ITEM(py_shells, i, (PyObject*)obj);
+    }
+
+    PyObject* py_holes = PyList_New(holes.count);
+    if (!py_holes) {
+        Py_DECREF(py_shells);
+        return NULL;
+    }
+    for (uint64_t i = 0; i < holes.count; i++) {
+        Polygon* poly = holes[i];
+        PolygonObject* obj = PyObject_New(PolygonObject, &polygon_object_type);
+        obj = (PolygonObject*)PyObject_Init((PyObject*)obj, &polygon_object_type);
+        obj->polygon = poly;
+        poly->tag = tag;
+        poly->owner = obj;
+        PyList_SET_ITEM(py_holes, i, (PyObject*)obj);
+    }
+
+    PyObject* result = PyTuple_Pack(2, py_shells, py_holes);
+    Py_DECREF(py_shells);
+    Py_DECREF(py_holes);
+    return result;
+}
+
 static PyObject* inside_function(PyObject* mod, PyObject* args, PyObject* kwds) {
     PyObject* py_points;
     PyObject* py_polygons;
@@ -1875,6 +2036,8 @@ static PyMethodDef gdstk_methods[] = {
     {"text", (PyCFunction)text_function, METH_VARARGS | METH_KEYWORDS, text_function_doc},
     {"contour", (PyCFunction)contour_function, METH_VARARGS | METH_KEYWORDS, contour_function_doc},
     {"offset", (PyCFunction)offset_function, METH_VARARGS | METH_KEYWORDS, offset_function_doc},
+    {"filter_holes", (PyCFunction)filter_holes_function, METH_VARARGS | METH_KEYWORDS,
+     filter_holes_function_doc},
     {"boolean", (PyCFunction)boolean_function, METH_VARARGS | METH_KEYWORDS, boolean_function_doc},
     {"slice", (PyCFunction)slice_function, METH_VARARGS | METH_KEYWORDS, slice_function_doc},
     {"inside", (PyCFunction)inside_function, METH_VARARGS | METH_KEYWORDS, inside_function_doc},

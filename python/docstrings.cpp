@@ -3453,6 +3453,56 @@ Notes:
        the union of polygons in `operand1`.
     )!");
 
+PyDoc_STRVAR(filter_holes_function_doc,
+              R"!(filter_holes(polygons, precision=1e-3, layer=0, datatype=0, mapped=False) -> tuple | list
+
+Separate a set of polygons into outer shells and inner holes.
+
+When ``mapped=False`` (default), all polygons are merged (union) and
+the result is decomposed into outer contours (shells) and inner
+contours (holes), returned as a single ``(shells, holes)`` tuple.
+
+When ``mapped=True``, each element of the input sequence is processed
+independently and the result is a list of ``(shells, holes)`` tuples,
+one per input element, preserving the correspondence between input
+and output.
+
+Args:
+    polygons (Polygon, FlexPath, RobustPath, Reference, sequence):
+      Polygons to separate. If this is a sequence, each element can be
+      any of the polygonal types or a sequence of points (coordinate
+      pairs or complex).
+    precision: Desired precision for rounding vertex coordinates.
+    layer: layer number assigned to the resulting polygons.
+    datatype: data type number assigned to the resulting polygons.
+    mapped: If ``True``, return a list of ``(shells, holes)`` tuples
+      mapping each input element to its result.
+
+Returns:
+    Tuple ``(shells, holes)`` if ``mapped=False``, or a list of such
+    tuples if ``mapped=True``.
+
+Examples:
+    >>> ring = gdstk.ellipse((0, 0), 5, inner_radius=3)
+    >>> shells, holes = gdstk.filter_holes([ring])
+    >>> len(shells), len(holes)
+    (1, 1)
+
+    >>> rings = [gdstk.ellipse((0, 0), 5, inner_radius=3),
+    ...          gdstk.rectangle((0, 0), (10, 10))]
+    >>> results = gdstk.filter_holes(rings, mapped=True)
+    >>> len(results)
+    2
+    >>> len(results[0][0]), len(results[0][1])
+    (1, 1)
+    >>> len(results[1][0]), len(results[1][1])
+    (1, 0)
+
+Notes:
+    Repetitions are not applied to any elements, except references
+    and their contents.  When ``mapped=False``, all input polygons are
+    merged during the operation.)!");
+
 PyDoc_STRVAR(slice_function_doc, R"!(slice(polygons, position, axis, precision=1e-3) -> list
 
 Slice polygons along x and y axes.

@@ -78,6 +78,11 @@ inline ErrorCode offset(const Polygon& poly, double distance, OffsetJoin join, d
 ErrorCode slice(const Polygon& polygon, const Array<double>& positions, bool x_axis, double scaling,
                 Array<Polygon*>* result);
 
+// Separate a set of polygons into their outer shells and holes using a union operation.
+// Shells (outer contours) are appended to shells and holes (inner contours) to holes.
+ErrorCode filter_holes(const Array<Polygon*>& polys, double scaling, Array<Polygon*>& shells,
+                       Array<Polygon*>& holes);
+
 }  // namespace gdstk
 
 #endif

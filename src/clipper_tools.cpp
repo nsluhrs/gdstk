@@ -313,4 +313,33 @@ ErrorCode slice(const Polygon& polygon, const Array<double>& positions, bool x_a
     return error_code;
 }
 
+static void process_filter_node(const PolyPath64* node, double scaling, Array<Polygon*>& shells,
+                                Array<Polygon*>& holes) {
+    if (node->IsHole()) {
+        holes.append(path_to_polygon(node->Polygon(), scaling));
+    } else {
+        shells.append(path_to_polygon(node->Polygon(), scaling));
+    }
+    for (size_t i = 0; i < node->Count(); i++) {
+        process_filter_node(node->Child(i), scaling, shells, holes);
+    }
+}
+
+ErrorCode filter_holes(const Array<Polygon*>& polys, double scaling, Array<Polygon*>& shells,
+                       Array<Polygon*>& holes) {
+    Paths64 paths = polygons_to_paths(polys, scaling);
+
+    Clipper2Lib::Clipper64 clpr;
+    clpr.AddSubject(paths);
+
+    PolyTree64 solution;
+    clpr.Execute(Clipper2Lib::ClipType::Union, Clipper2Lib::FillRule::NonZero, solution);
+
+    for (size_t i = 0; i < solution.Count(); i++) {
+        process_filter_node(solution.Child(i), scaling, shells, holes);
+    }
+
+    return ErrorCode::NoError;
+}
+
 }  // namespace gdstk
