@@ -87,11 +87,35 @@ static inline bool point_less(const Point64& p1, const Point64& p2) {
     return p1.x < p2.x || (p1.x == p2.x && p1.y < p2.y);
 }
 
-static inline bool sort_path_less(const SortingPath& p1, const SortingPath& p2) {
+static inline bool path_less(const SortingPath& p1, const SortingPath& p2) {
     return point_less(*p1.min_point, *p2.min_point);
 }
 
 static Path64 link_holes(const PolyPath64* node, ErrorCode& error_code) {
+    /*
+    static int dbg_counter = 0;
+    char dbg_name[16];
+    snprintf(dbg_name, COUNT(dbg_name), "d%d.gds", dbg_counter++);
+    Library dbg_library = {.name = dbg_name, .unit = 1e-6, .precision = 1e-9};
+    Cell dbg_cell = {.name = dbg_name};
+    dbg_library.cell_array.append(&dbg_cell);
+    Polygon* dbg_poly = (Polygon*)allocate_clear(sizeof(Polygon));
+    dbg_cell.polygon_array.append(dbg_poly);
+    dbg_poly->tag = make_tag(1, 0);
+    ClipperLib::Path dbg_path = node->Contour;
+    for (ClipperLib::Path::iterator pt = dbg_path.begin(); pt != dbg_path.end(); pt++)
+        dbg_poly->point_array.append(Vec2{(double)pt->X, (double)pt->Y});
+    for (ClipperLib::PolyNodes::iterator child = node->Childs.begin(); child != node->Childs.end();
+         child++) {
+        dbg_poly = (Polygon*)allocate_clear(sizeof(Polygon));
+        dbg_cell.polygon_array.append(dbg_poly);
+        dbg_path = (*child)->Contour;
+        for (ClipperLib::Path::iterator pt = dbg_path.begin(); pt != dbg_path.end(); pt++)
+            dbg_poly->point_array.append(Vec2{(double)pt->X, (double)pt->Y});
+    }
+    printf("Debug library %s written with %ld polygons\n", dbg_name, dbg_cell.polygon_array.count);
+    dbg_library.write_gds(dbg_name, 0, NULL);
+    */
     Path64 contour = node->Polygon();
     uint64_t count = contour.size();
 
@@ -111,7 +135,7 @@ static Path64 link_holes(const PolyPath64* node, ErrorCode& error_code) {
     }
     contour.reserve(count);
 
-    sort(holes, sort_path_less);
+    sort(holes, path_less);
 
     for (uint64_t i = 0; i < holes.count; i++) {
         const Path64::const_iterator hole_min = holes[i].min_point;
