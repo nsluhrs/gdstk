@@ -142,6 +142,7 @@ static Path64 link_holes(const PolyPath64* node, ErrorCode& error_code) {
     sort(holes, path_less);
 
     for (uint64_t i = 0; i < holes.count; i++) {
+        // holes are guaranteed to be oriented opposite to their parent
         const Path64::const_iterator hole_min = holes[i].path->begin() + holes[i].min_index;
         const Path64::const_iterator p_end = contour.end();
         Path64::iterator p_closest = contour.end();
@@ -151,6 +152,7 @@ static Path64 link_holes(const PolyPath64* node, ErrorCode& error_code) {
         for (; p_next != p_end; p_prev = p_next++) {
             if ((p_next->y <= hole_min->y && hole_min->y < p_prev->y) ||
                 (p_prev->y < hole_min->y && hole_min->y <= p_next->y)) {
+                // Avoid integer overflow in the multiplication
                 double temp = (double)(p_prev->x - p_next->x) * (double)(hole_min->y - p_next->y) /
                               (double)(p_prev->y - p_next->y);
                 int64_t x = p_next->x + (int64_t)llround(temp);
