@@ -249,7 +249,7 @@ ErrorCode offset(const Array<Polygon*>& polygons, double distance, OffsetJoin jo
             jt_join = Clipper2Lib::JoinType::Bevel;
             break;
         case OffsetJoin::Miter:
-            jt_join = Clipper2Lib::JoinType::Miter;
+            jt_join = Clipper2Lib::JoinType::Square;
             miter_limit = tolerance;
             break;
         case OffsetJoin::Round:
